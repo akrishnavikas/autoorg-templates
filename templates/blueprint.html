@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% block title %}AutoOrg · {{ blueprint.name }}{% endblock %}
+{% block content %}
+<div class="detail-page" data-blueprint="{{ blueprint.slug }}">
+  <header class="detail-header tone-{{ blueprint.color }}">
+    <div>
+      <a class="back-link" href="{{ url_for('index') }}">← All blueprints</a>
+      <div class="detail-title-row">
+        <div class="large-icon">{{ blueprint.icon }}</div>
+        <div>
+          <div class="card-category">Blueprint 0{{ blueprint.number }} · {{ blueprint.category }}</div>
+          <h1>{{ blueprint.name }}</h1>
+          <p>{{ blueprint.tagline }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="autonomy-badge">
+      <small>DEFAULT AUTONOMY</small>
+      <strong>{{ blueprint.defaultAutonomy }}</strong>
+      <span>Max: {{ blueprint.maxAutonomy }}</span>
+    </div>
+  </header>
+
+  <div class="detail-grid">
+    <section class="configuration-panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">01 · CONFIGURATION</div>
+          <h2>Tell AutoOrg about this workload</h2>
+        </div>
+        <button class="ghost-button" id="fillSamples" type="button">Use sample values</button>
+      </div>
+
+      <div class="step-tabs">
+        <button class="step-tab active" data-step="context">Context</button>
+        <button class="step-tab" data-step="autonomy">Autonomy</button>
+        <button class="step-tab" data-step="delegation">Delegation</button>
+        <button class="step-tab" data-step="integrations">Integrations</button>
+        <button class="step-tab" data-step="review">Review</button>
+      </div>
+
+      <form id="blueprintForm" autocomplete="off">
+        <div class="step-panel active" data-panel="context">
+          {% set current_section = namespace(value='') %}
+          {% for field in blueprint.fields %}
+            {% if current_section.value != field.section %}
+              {% if current_section.value %}</div>{% endif %}
+              {% set current_section.value = field.section %}
+              <div class="form-section">
+                <div class="form-section-title">{{ field.section }}</div>
+            {% endif %}
+            <label class="field">
+              <span class="field-label">{{ field.label }} {% if field.required %}<em>*</em>{% endif %}</span>
+              {% if field.type == 'textarea' %}
+                <textarea data-key="{{ field.key }}" data-sample="{{ field.sample|e }}" {% if field.required %}required{% endif %}>{{ field.sample }}</textarea>
+              {% elif field.type == 'select' %}
+                <select data-key="{{ field.key }}" {% if field.required %}required{% endif %}>
+                  {% for option in field.options %}
+                    <option value="{{ option }}" {% if option == field.sample %}selected{% endif %}>{{ option }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <input data-key="{{ field.key }}" data-sample="{{ field.sample|e }}" type="{{ field.type }}" value="{{ field.sample|e }}" {% if field.required %}required{% endif %}>
+              {% endif %}
+              <small>Sample: {{ field.sample }}</small>
+            </label>
+          {% endfor %}
+          {% if current_section.value %}</div>{% endif %}
+
+          <div class="form-section">
+            <div class="form-section-title">User Persona & Expertise</div>
+            <div class="field-grid two-col">
+              <label class="field"><span class="field-label">Primary persona</span><select data-key="persona"><option>Non-Technical User / Founder</option><option>Developer</option><option>Architect</option><option>DevOps / SRE Engineer</option><option>Data / ML Engineer</option><option>Advanced / Platform User</option></select><small>Who is operating AutoOrg?</small></label>
+              <label class="field"><span class="field-label">Explanation preference</span><select data-key="explanation"><option>Balanced</option><option>Detailed</option><option>Expert-level concise</option><option>Step-by-step beginner</option></select><small>How much explanation should AI provide?</small></label>
+            </div>
+            <div class="expertise-grid">
+              <label><span>Architecture</span><select data-key="expertise_arch"><option>Beginner</option><option>Working</option><option>Intermediate</option><option selected>Advanced</option><option>Expert</option></select></label>
+              <label><span>Backend</span><select data-key="expertise_backend"><option>Beginner</option><option>Working</option><option>Intermediate</option><option>Advanced</option><option selected>Expert</option></select></label>
+              <label><span>Frontend</span><select data-key="expertise_frontend"><option>Beginner</option><option>Working</option><option selected>Intermediate</option><option>Advanced</option><option>Expert</option></select></label>
+              <label><span>DevOps / Cloud</span><select data-key="expertise_devops"><option>Beginner</option><option>Working</option><option>Intermediate</option><option>Advanced</option><option>Expert</option></select></label>
+              <label><span>Security</span><select data-key="expertise_security"><option selected>Beginner</option><option>Working</option><option>Intermediate</option><option>Advanced</option><option>Expert</option></select></label>
+              <label><span>Data / ML</span><select data-key="expertise_ml"><option>Beginner</option><option>Working</option><option>Intermediate</option><option>Advanced</option><option>Expert</option></select></label>
+            </div>
+          </div>
+          <div class="step-actions"><button type="button" class="primary-button next-step" data-next="autonomy">Continue to autonomy <span>→</span></button></div>
+        </div>
+
+        <div class="step-panel" data-panel="autonomy">
+          <div class="panel-callout">
+            <span class="callout-icon">⚙</span>
+            <div><strong>{{ blueprint.name }} starts at {{ blueprint.defaultAutonomy }}</strong><p>The UI below is a policy preview. This demo does not execute tasks or grant real permissions.</p></div>
+          </div>
+          <div class="autonomy-options">
+            {% for level, title, desc in [('A0','Observe / Recommend','Analyze, explain and plan. No external execution.'),('A1','Assist','Draft and prepare safe actions for review.'),('A2','Collaborate','Execute bounded tasks with approval for high-impact actions.'),('A3','Delegate','Execute multi-step work and deploy to approved non-production environments.'),('A4','Autonomous within Policy','Run the end-to-end workflow inside explicit access, budget and approval boundaries.')] %}
+            <label class="autonomy-card {% if level in blueprint.defaultAutonomy %}selected{% endif %}">
+              <input type="radio" name="autonomy" value="{{ level }} — {{ title }}" {% if level in blueprint.defaultAutonomy %}checked{% endif %}>
+              <div><span class="autonomy-level">{{ level }}</span><strong>{{ title }}</strong><p>{{ desc }}</p></div>
+            </label>
+            {% endfor %}
+          </div>
+          <div class="policy-grid">
+            <label class="field"><span class="field-label">Daily budget</span><input data-key="daily_budget" value="₹25,000"><small>Demo value only.</small></label>
+            <label class="field"><span class="field-label">Per-task budget</span><input data-key="task_budget" value="₹2,000"><small>Demo value only.</small></label>
+            <label class="field"><span class="field-label">High-cost model</span><select data-key="model_policy"><option>Auto-select by task complexity</option><option>Require approval above threshold</option><option>Always use lowest-cost suitable model</option></select><small>Model Router policy.</small></label>
+          </div>
+          <div class="step-actions"><button type="button" class="ghost-button prev-step" data-prev="context">← Back</button><button type="button" class="primary-button next-step" data-next="delegation">Continue to delegation <span>→</span></button></div>
+        </div>
+
+        <div class="step-panel" data-panel="delegation">
+          <div class="section-heading compact"><div><div class="eyebrow">TASK OWNERSHIP</div><h2>What should the human own?</h2></div></div>
+          <p class="muted">Use this layer to personalize the same blueprint for different users.</p>
+          <div class="delegation-table">
+            <div class="delegation-head"><span>Task area</span><span>Human</span><span>Shared</span><span>AI</span></div>
+            {% for task in ['Product requirements','Architecture','Coding','Testing','Documentation','Infrastructure','Security','Data / ML','Production release','Incident response'] %}
+            <div class="delegation-row"><strong>{{ task }}</strong><label><input type="radio" name="del_{{ loop.index }}" value="human"> Human</label><label><input type="radio" name="del_{{ loop.index }}" value="shared" {% if task in ['Architecture','Security','Product requirements'] %}checked{% endif %}> Shared</label><label><input type="radio" name="del_{{ loop.index }}" value="ai" {% if task in ['Testing','Documentation'] %}checked{% endif %}> AI</label></div>
+            {% endfor %}
+          </div>
+          <div class="step-actions"><button type="button" class="ghost-button prev-step" data-prev="autonomy">← Back</button><button type="button" class="primary-button next-step" data-next="integrations">Continue to integrations <span>→</span></button></div>
+        </div>
+
+        <div class="step-panel" data-panel="integrations">
+          <div class="section-heading compact"><div><div class="eyebrow">TOOLS & ACCESS</div><h2>Connect the organization conceptually</h2></div></div>
+          <div class="integration-grid">
+            {% for tool in [('GitHub','Code, branches and pull requests'),('Issue Tracker','Jira / GitHub Issues / Azure Boards'),('Cloud','AWS / Azure / Nebius resource APIs'),('CI/CD','GitHub Actions / Jenkins / GitLab'),('Kubernetes','Cluster operations and diagnostics'),('Observability','Grafana / logs / metrics / traces'),('Database','Approved DB metadata and operations'),('Documentation','Confluence / docs repository')] %}
+            <label class="integration-card"><input type="checkbox" data-tool="{{ tool[0] }}" checked><div><strong>{{ tool[0] }}</strong><span>{{ tool[1] }}</span></div><b>✓</b></label>
+            {% endfor %}
+          </div>
+          <div class="access-matrix">
+            <div class="matrix-title">Environment access preview</div>
+            <div class="matrix-row matrix-head"><span>Environment</span><span>Read</span><span>Write</span><span>Apply</span></div>
+            {% for env, read, write, apply in [('Development','✓','✓','✓'),('Test','✓','✓','✓'),('Staging','✓','✓','Approval'),('Production','✓','—','Approval')] %}
+            <div class="matrix-row"><strong>{{ env }}</strong><span>{{ read }}</span><span>{{ write }}</span><span class="approval-cell">{{ apply }}</span></div>
+            {% endfor %}
+          </div>
+          <div class="gate-box"><div><strong>Mandatory policy gates</strong><p>Production deployment · destructive operations · privileged access · secrets · high-cost resources</p></div><span>Protected</span></div>
+          <div class="step-actions"><button type="button" class="ghost-button prev-step" data-prev="delegation">← Back</button><button type="button" class="primary-button next-step" data-next="review">Review organization <span>→</span></button></div>
+        </div>
+
+        <div class="step-panel" data-panel="review">
+          <div class="section-heading compact"><div><div class="eyebrow">FINAL REVIEW</div><h2>Preview before “Spawn”</h2></div></div>
+          <div class="review-grid">
+            <div class="review-card"><span>Blueprint</span><strong>{{ blueprint.name }}</strong><small>Version 0.1 · Demo template</small></div>
+            <div class="review-card"><span>Autonomy</span><strong id="reviewAutonomy">A2 — Collaborate</strong><small>Within policy</small></div>
+            <div class="review-card"><span>Profiles</span><strong>{{ blueprint.roles|length }}</strong><small>Initial workers</small></div>
+            <div class="review-card"><span>Approvals</span><strong>{{ blueprint.approvalGates|length }}</strong><small>Protected actions</small></div>
+          </div>
+          <div class="review-note"><strong>Demo behavior</strong><p>Clicking “Preview organization” below only updates the on-screen summary. No agent, container, cloud account or external service is contacted.</p></div>
+          <div class="step-actions"><button type="button" class="ghost-button prev-step" data-prev="integrations">← Back</button><button type="button" class="primary-button" id="previewButton">Preview organization <span>→</span></button></div>
+        </div>
+      </form>
+    </section>
+
+    <aside class="preview-panel">
+      <div class="preview-sticky">
+        <div class="preview-head"><div><div class="eyebrow">02 · ORGANIZATION PREVIEW</div><h2>{{ blueprint.name }}</h2></div><span class="live-pill"><i></i> Template</span></div>
+        <div class="preview-outcome">{{ blueprint.mainOutcome }}</div>
+        <div class="preview-block"><div class="block-label">STARTING PROFILES</div><div class="org-tree">
+          {% for role in blueprint.roles %}
+          <div class="tree-item level-{{ 1 if loop.index == 1 else 2 }}"><span class="tree-dot"></span><span>{{ role }}</span></div>
+          {% endfor %}
+        </div></div>
+        <div class="preview-block"><div class="block-label">KNOWLEDGE</div><div class="tag-wrap">{% for x in blueprint.knowledge %}<span>{{ x }}</span>{% endfor %}</div></div>
+        <div class="preview-block"><div class="block-label">SKILLS</div><div class="tag-wrap muted-tags">{% for x in blueprint.skills %}<span>{{ x }}</span>{% endfor %}</div></div>
+        <div class="preview-block"><div class="block-label">APPROVAL GATES</div><ul class="gate-list">{% for x in blueprint.approvalGates %}<li>{{ x }}</li>{% endfor %}</ul></div>
+        <div class="preview-footer"><div><span>Current mode</span><strong id="sideAutonomy">{{ blueprint.defaultAutonomy }}</strong></div><button class="spawn-button" id="demoSpawn">Spawn demo org</button></div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span>✓</span><div><strong>Demo preview ready</strong><p>No backend action was executed.</p></div></div>
+{% endblock %}

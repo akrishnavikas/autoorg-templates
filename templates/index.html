@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% block title %}AutoOrg · Blueprint Studio{% endblock %}
+{% block content %}
+<header class="topbar">
+  <div>
+    <div class="eyebrow">AUTONOMOUS ENTERPRISE</div>
+    <h1>Choose the organization you want to start with.</h1>
+    <p class="subhead">Seven production-oriented blueprints, each with its own user inputs, roles, autonomy ceiling and policy gates.</p>
+  </div>
+  <div class="top-actions">
+    <span class="demo-pill">DEMO UI</span>
+    <span class="version-pill">Blueprint Schema v0.1</span>
+  </div>
+</header>
+
+<section class="hero-strip">
+  <div class="hero-stat"><span>7</span><small>Blueprints</small></div>
+  <div class="hero-stat"><span>A0 → A4</span><small>Autonomy spectrum</small></div>
+  <div class="hero-stat"><span>Policies</span><small>Access · Budget · Approvals</small></div>
+  <div class="hero-stat"><span>Preview</span><small>No runtime actions in demo</small></div>
+</section>
+
+<section class="blueprint-grid">
+  {% for item in blueprints %}
+  <article class="blueprint-card tone-{{ item.color }}">
+    <div class="card-head">
+      <div class="blueprint-icon">{{ item.icon }}</div>
+      <span class="number-badge">0{{ item.number }}</span>
+    </div>
+    <div class="card-category">{{ item.category }}</div>
+    <h2>{{ item.name }}</h2>
+    <p>{{ item.tagline }}</p>
+    <div class="card-meta">
+      <div><span>DEFAULT</span><strong>{{ item.defaultAutonomy }}</strong></div>
+      <div><span>MAX</span><strong>{{ item.maxAutonomy }}</strong></div>
+    </div>
+    <div class="role-chips">
+      {% for role in item.roles[:4] %}<span>{{ role }}</span>{% endfor %}
+      {% if item.roles|length > 4 %}<span>+{{ item.roles|length - 4 }}</span>{% endif %}
+    </div>
+    <a class="card-button" href="{{ url_for('blueprint_detail', slug=item.slug) }}">Configure blueprint <span>→</span></a>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="principle-bar">
+  <div class="principle-label">AUTOORG MODEL</div>
+  <div class="principle-flow">
+    <span>User Expertise</span><b>+</b><span>Blueprint</span><b>+</b><span>Autonomy Policy</span><b>+</b><span>Access / Tools / Budget</span><b>→</b><strong>Organization</strong>
+  </div>
+</section>
+{% endblock %}

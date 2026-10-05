@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AutoOrg Blueprint Studio{% endblock %}</title>
+  <meta name="description" content="AutoOrg Blueprint demo UI">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-name">AutoOrg</div>
+          <div class="brand-sub">Blueprint Studio</div>
+        </div>
+      </div>
+      <div class="sidebar-title">Blueprints</div>
+      <nav class="blueprint-nav">
+        {% for item in blueprints %}
+        <a href="{{ url_for('blueprint_detail', slug=item.slug) }}" class="nav-item {% if blueprint and blueprint.slug == item.slug %}active{% endif %}">
+          <span class="nav-number">0{{ item.number }}</span>
+          <span class="nav-copy">
+            <strong>{{ item.name }}</strong>
+            <small>{{ item.defaultAutonomy }}</small>
+          </span>
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-foot">
+        <span class="status-dot"></span>
+        Demo mode · no runtime actions
+      </div>
+    </aside>
+    <main class="main-content">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
